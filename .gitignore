@@ -1,0 +1,36 @@
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pycache
+
+# Secrets & credentials — NEVER commit these
+.env
+.env.local
+.env.*.local
+
+# Database & vector index files (runtime-generated)
+data/faiss_index*
+data/*.db
+data/*.bin
+data/*.pkl
+
+# IDE / editor folders
+.claude/
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.egg-info/
+dist/
+build/

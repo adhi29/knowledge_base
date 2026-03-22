@@ -1,0 +1,167 @@
+NEW JOINER GUIDE — BANKING OPERATIONS
+Document ID: HR-OPS-NJG-001 | Version: 1.5 | Classification: Internal
+Department: HR / Operations Learning & Development
+Last Updated: February 2025
+
+==============================================================================
+WELCOME TO CITI BANKING OPERATIONS
+==============================================================================
+
+This guide covers everything you need to know in your first 90 days as a new
+Operations team member. Save this document and refer back to it whenever you
+need a reminder on systems, processes, or who to contact.
+
+==============================================================================
+WEEK 1: GETTING STARTED
+==============================================================================
+
+Day 1 Checklist:
+[ ] Collect badge and hardware from IT (Room 4B, Level 2)
+[ ] Set up SSO (Single Sign-On) with your employee ID — IT Help Desk ext. 5555
+[ ] Complete mandatory security awareness training (link in welcome email)
+[ ] Review Code of Conduct and sign acknowledgement form
+[ ] Meet your buddy (assigned by your manager) for a systems walk-through
+
+Key Systems You Will Access:
+1. Flexcube — Core Banking System (request access via ServiceNow ticket)
+2. Actimize — AML/Transaction Monitoring (Compliance team only)
+3. SharePoint — Document repository (auto-provisioned)
+4. Confluence — Team wiki and SOPs
+5. ServiceNow — IT ticketing system (self-service at servicenow.citi.internal)
+6. Outlook — Email (provisioned on Day 1)
+
+==============================================================================
+SYSTEM ACCESS GUIDE
+==============================================================================
+
+Flexcube Access:
+- Submit ServiceNow request: Category = "Core Banking", Type = "New User Access"
+- Requires manager approval + IT Security sign-off (SLA: 3 business days)
+- Mandatory training: Flexcube Fundamentals (2 hours, available on Citi Learn)
+- Temporary access denied: Contact ops-support@citi.com
+
+Actimize Access (Compliance team only):
+- Submit request via: compliance-access@citi.com
+- Requires BSA/AML certification (complete before requesting)
+- SLA: 5 business days
+
+SWIFT/GFTS Access (for wire transfer processing):
+- Available to authorized WTOs (Wire Transfer Operators) only
+- Requires completion of Wire Transfer SOP training (SOP-OPS-001)
+- Dual-factor authentication mandatory
+
+==============================================================================
+COMMON BANKING OPERATIONS ACRONYMS
+==============================================================================
+
+ABA     — American Bankers Association (routing number)
+AML     — Anti-Money Laundering
+BSA     — Bank Secrecy Act
+CHIPS   — Clearing House Interbank Payments System
+CTR     — Currency Transaction Report
+CDD     — Customer Due Diligence
+DDA     — Demand Deposit Account (checking account)
+EDD     — Enhanced Due Diligence
+FATF    — Financial Action Task Force
+FinCEN  — Financial Crimes Enforcement Network
+GFTS    — Global Funds Transfer System
+IBAN    — International Bank Account Number
+KYC     — Know Your Customer
+OFAC    — Office of Foreign Assets Control
+PEP     — Politically Exposed Person
+SAR     — Suspicious Activity Report
+SDN     — Specially Designated Nationals (OFAC list)
+SLA     — Service Level Agreement
+SOP     — Standard Operating Procedure
+SSN     — Social Security Number
+SWIFT   — Society for Worldwide Interbank Financial Telecommunication
+WTO     — Wire Transfer Operator
+
+==============================================================================
+ESCALATION PATHS
+==============================================================================
+
+If you are unsure about a transaction or process, follow this escalation path:
+
+Level 1: Your direct Team Lead (for day-to-day operational questions)
+Level 2: Operations Manager (for exceptions and policy interpretation)
+Level 3: Compliance Team (for regulatory questions, SAR, CTR)
+Level 4: Legal / Risk (for unusual regulatory requests)
+
+Never attempt to resolve a compliance issue independently — always escalate.
+
+==============================================================================
+KEY POLICIES TO READ IN YOUR FIRST WEEK
+==============================================================================
+
+1. Wire Transfer SOP (SOP-OPS-001) — on Confluence > Operations > SOPs
+2. KYC/AML Policy (POL-COMP-007) — on Confluence > Compliance > Policies
+3. Data Classification Policy — on SharePoint > IT Security > Policies
+4. Information Security Policy — mandatory acknowledgement on Day 1
+5. Acceptable Use Policy (AUP) — covers email, internet, and system usage
+
+==============================================================================
+TRAINING PLAN — FIRST 90 DAYS
+==============================================================================
+
+Week 1-2:
+- Security awareness training (mandatory, Day 1)
+- Flexcube Fundamentals (Citi Learn, 2 hours)
+- Banking Operations Overview (Citi Learn, 3 hours)
+- Shadow your buddy for live transaction processing
+
+Week 3-4:
+- Wire Transfer Processing (SOP-OPS-001 + practical assessment)
+- KYC Fundamentals (mandatory for all, 4 hours on Citi Learn)
+- OFAC Screening practical exercise with Team Lead
+
+Week 5-8:
+- Transaction Monitoring Basics (if applicable to your role)
+- Product-specific training (assigned by manager)
+- First independent transaction processing (supervised)
+
+Week 9-12:
+- First performance check-in with manager
+- Compliance certification exams (if required for your role)
+- Full independent processing with periodic review
+
+==============================================================================
+FREQUENTLY ASKED QUESTIONS
+==============================================================================
+
+Q: How long does Flexcube access take?
+A: Typically 3 business days after your ServiceNow request is approved by your manager.
+
+Q: Can I process wire transfers on my first week?
+A: No. You must complete Wire Transfer SOP training and pass the practical assessment first.
+   Most new joiners begin independent wire processing in weeks 5-8.
+
+Q: What do I do if I accidentally initiate a wrong wire?
+A: Do NOT try to fix it yourself. Immediately contact your Team Lead and the Operations
+   Manager. Time is critical — some wires can be recalled if caught within 30 minutes.
+
+Q: Who approves my leave?
+A: Your direct line manager via Workday (the HR system). Submit requests at least 2 weeks
+   in advance for planned leave.
+
+Q: I spotted something that looks suspicious in a transaction. What do I do?
+A: Do not take any action on the transaction. Flag it to your Team Lead immediately
+   and do NOT inform the customer. Your Team Lead will escalate to Compliance if needed.
+
+Q: Where are the SOPs stored?
+A: All SOPs are on Confluence under Operations > Standard Operating Procedures.
+   Policy documents are on SharePoint under Compliance > Policies.
+
+==============================================================================
+CONTACTS QUICK REFERENCE
+==============================================================================
+
+IT Help Desk            ext. 5555       ops-support@citi.com
+HR Connect              ext. 5100       hr-connect@citi.com
+Compliance Hotline      ext. 7200       compliance-alert@citi.com
+Fraud Reporting         ext. 7300       fraud-ops@citi.com (immediate escalation)
+Facilities              ext. 4000
+
+==============================================================================
+END OF NEW JOINER GUIDE
+==============================================================================

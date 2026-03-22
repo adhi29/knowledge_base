@@ -1,0 +1,139 @@
+STANDARD OPERATING PROCEDURE — WIRE TRANSFER PROCESSING
+Document ID: SOP-OPS-001 | Version: 3.2 | Classification: Internal
+Department: Banking Operations | Owner: Operations SME Team
+Last Updated: January 2025
+
+==============================================================================
+1. PURPOSE AND SCOPE
+==============================================================================
+
+This SOP outlines the end-to-end process for initiating, verifying, and completing
+domestic and international wire transfers within Citi Banking Operations. It applies
+to all Operations Analysts (L1-L3), Team Leads, and Compliance staff involved in
+wire transfer processing.
+
+==============================================================================
+2. WIRE TRANSFER INITIATION — DOMESTIC (USD)
+==============================================================================
+
+2.1 Pre-requisites
+- Initiator must be an authorized wire transfer operator (WTO) with active Flexcube access
+- Client must have a verified and active demand deposit account (DDA)
+- Daily wire limit: $500,000 per transaction for standard operators; $2,000,000 for senior operators
+- Transactions above $10,000 automatically trigger FinCEN CTR reporting requirements
+
+2.2 Step-by-Step Process
+
+Step 1: Log in to Flexcube Core Banking System using SSO credentials
+Step 2: Navigate to Transactions > Wire Transfer > New Domestic Wire
+Step 3: Enter beneficiary details:
+   - Full legal name (must match account holder name exactly)
+   - ABA routing number (9 digits)
+   - Account number (up to 17 digits)
+   - Payment amount in USD
+   - Memo / Reference field (mandatory for amounts > $50,000)
+Step 4: Run OFAC sanctions screening — system auto-triggers, do NOT proceed if flagged
+Step 5: Verify dual-control approval for transactions > $100,000
+   - Second approver must be at Team Lead level or above
+   - Approval must be completed within 30 minutes of initiation
+Step 6: Submit and retain the Flexcube confirmation number (format: DCW-YYYYMMDD-XXXXXXXX)
+Step 7: Send confirmation email to client within 15 minutes of successful submission
+
+2.3 Cut-off Times
+- Fedwire: 5:30 PM ET (Monday–Friday, excluding Federal holidays)
+- CHIPS: 4:45 PM ET
+- Post-deadline transactions are processed next business day
+
+==============================================================================
+3. WIRE TRANSFER INITIATION — INTERNATIONAL (SWIFT)
+==============================================================================
+
+3.1 Additional Requirements for International Wires
+
+- Beneficiary Bank SWIFT/BIC code (8 or 11 characters)
+- Beneficiary IBAN (for EU transactions) or account number
+- Correspondent bank details if required
+- Currency conversion rate confirmation from FX Desk (for non-USD)
+- Purpose of payment (mandatory per regulatory requirements)
+
+3.2 SWIFT Message Types
+- MT103: Customer credit transfer (most common)
+- MT202: Financial institution transfer
+- MT199: Free-format message for queries
+
+3.3 Compliance Checks for International Wires
+- OFAC SDN List screening (automatic)
+- EU Sanctions screening (automatic for EUR transactions)
+- PEP (Politically Exposed Person) check for amounts > $25,000
+- Enhanced Due Diligence (EDD) for high-risk countries (see Appendix A)
+
+==============================================================================
+4. EXCEPTION HANDLING
+==============================================================================
+
+4.1 OFAC Sanctions Hit
+- Do NOT release the transaction
+- Immediately escalate to Compliance team (compliance-alert@citi.com)
+- Place the transaction in "Pending Compliance Review" status in Flexcube
+- Response required within 4 business hours
+- Document all actions in the wire transfer log
+
+4.2 Beneficiary Mismatch
+- If the beneficiary name does not exactly match the account records:
+  - For minor discrepancies (typos, abbreviations): Team Lead can approve with notes
+  - For significant discrepancies: Reject and return funds to originator
+  - Never process a wire with a completely different beneficiary name
+
+4.3 Insufficient Funds
+- System will auto-reject if DDA balance is insufficient
+- Notify client within 1 business hour
+- Do not allow overdraft for wire transfers (unlike check processing)
+
+4.4 Duplicate Wire Detection
+- System flags potential duplicates (same amount, same beneficiary, within 24 hours)
+- Analyst must call client to confirm before releasing duplicate
+- Log duplicate verification in the wire transfer audit trail
+
+==============================================================================
+5. REGULATORY REPORTING
+==============================================================================
+
+5.1 Currency Transaction Reports (CTR)
+- Required for any cash transaction exceeding $10,000 in a single business day
+- Filed with FinCEN within 15 calendar days
+- System auto-generates CTR draft; analyst must review and confirm within 24 hours
+
+5.2 Suspicious Activity Reports (SAR)
+- Required when suspicious activity is detected (structuring, unusual patterns)
+- Must be filed within 30 days of detecting suspicious activity
+- Do not notify the customer that a SAR has been filed (tipping-off prohibition)
+- Escalate to BSA/AML team via secure portal
+
+5.3 Record Retention
+- Wire transfer records must be retained for 7 years per BSA requirements
+- Records include: initiation details, approvals, OFAC results, client confirmations
+
+==============================================================================
+6. SYSTEM ACCESS AND CONTROLS
+==============================================================================
+
+- Flexcube access reviewed quarterly; unused accounts deactivated after 90 days
+- All wire transfer activity logged with timestamp, user ID, and IP address
+- Segregation of duties: initiator ≠ approver for transactions > $100,000
+- Supervisory override requires dual authorization from Operations Director level
+
+==============================================================================
+7. CONTACTS AND ESCALATION
+==============================================================================
+
+| Issue Type              | Contact                        | SLA         |
+|-------------------------|--------------------------------|-------------|
+| OFAC Hit                | compliance-alert@citi.com      | 4 hours     |
+| System Outage           | ops-support@citi.com           | 1 hour      |
+| Client Dispute          | client-relations@citi.com      | 2 hours     |
+| Regulatory Query        | bsa-aml-team@citi.com          | Same day    |
+| Fraud Suspicion         | fraud-ops@citi.com             | Immediate   |
+
+==============================================================================
+END OF DOCUMENT
+==============================================================================
