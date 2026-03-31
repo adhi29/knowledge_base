@@ -20,6 +20,7 @@ data/faiss_index*
 data/*.db
 data/*.bin
 data/*.pkl
+*.db
 
 # IDE / editor folders
 .claude/

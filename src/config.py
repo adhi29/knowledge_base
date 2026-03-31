@@ -39,6 +39,31 @@ class Settings(BaseSettings):
     api_host: str = Field("0.0.0.0", env="API_HOST")
     api_port: int = Field(8000, env="API_PORT")
 
+    # ── Enterprise Connectors ─────────────────────────────────────────────────
+    # Confluence
+    confluence_url: Optional[str] = Field(None, env="CONFLUENCE_URL")
+    confluence_user: Optional[str] = Field(None, env="CONFLUENCE_USER")
+    confluence_api_token: Optional[str] = Field(None, env="CONFLUENCE_API_TOKEN")
+
+    # Jira
+    jira_url: Optional[str] = Field(None, env="JIRA_URL")
+    jira_user: Optional[str] = Field(None, env="JIRA_USER")
+    jira_api_token: Optional[str] = Field(None, env="JIRA_API_TOKEN")
+
+    # Microsoft Graph (Outlook + SharePoint)
+    ms_tenant_id: Optional[str] = Field(None, env="MS_TENANT_ID")
+    ms_client_id: Optional[str] = Field(None, env="MS_CLIENT_ID")
+    ms_client_secret: Optional[str] = Field(None, env="MS_CLIENT_SECRET")
+    ms_mailbox: Optional[str] = Field(None, env="MS_MAILBOX")
+    ms_sharepoint_site_id: Optional[str] = Field(None, env="MS_SHAREPOINT_SITE_ID")
+    ms_sharepoint_drive_id: Optional[str] = Field(None, env="MS_SHAREPOINT_DRIVE_ID")
+
+    # ── Scheduler & notifications ───────────────────────────────────────────────
+    sync_interval_hours: int = Field(6, env="SYNC_INTERVAL_HOURS")
+    confluence_space_keys: str = Field("OPS", env="CONFLUENCE_SPACE_KEYS")  # comma-separated
+    jira_project_keys: str = Field("", env="JIRA_PROJECT_KEYS")             # comma-separated
+    slack_webhook_url: Optional[str] = Field(None, env="SLACK_WEBHOOK_URL")
+
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 

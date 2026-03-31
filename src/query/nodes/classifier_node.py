@@ -5,7 +5,7 @@ from src.config import settings
 
 client = Groq(api_key=settings.groq_api_key)
 
-QUERY_TYPES = ["factual", "procedural", "policy", "exception-handling", "general"]
+QUERY_TYPES = ["factual", "procedural", "policy", "exception-handling", "general", "greeting"]
 
 SYSTEM_PROMPT = """You are a query classifier for a banking operations knowledge chatbot.
 Classify the user query into exactly ONE of these types:
@@ -14,9 +14,10 @@ Classify the user query into exactly ONE of these types:
 - procedural: Asks how to do something, step-by-step processes
 - policy: Asks about rules, regulations, compliance requirements, policies
 - exception-handling: Asks about edge cases, exceptions to rules, escalation paths
-- general: General conversation, greetings, or out-of-scope questions
+- greeting: Greetings, small talk, conversational messages (e.g. 'hi', 'hello', 'how are you', 'thanks', 'bye')
+- general: Vague, ambiguous, or out-of-scope questions about banking that don't match other types
 
-Respond with ONLY the type label (one word from the list above). No explanation."""
+Respond with ONLY the type label (one word or hyphenated label from the list above). No explanation."""
 
 
 def classifier_node(state: QueryState) -> QueryState:

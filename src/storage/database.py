@@ -118,6 +118,39 @@ def init_db():
         )
     """)
 
+    # Connector sync state — tracks last sync per source for incremental sync
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS connector_sync_state (
+            source_key   TEXT PRIMARY KEY,   -- e.g. "confluence:OPS"
+            source_type  TEXT NOT NULL,
+            last_synced  TEXT,               -- ISO timestamp of last successful sync
+            docs_synced  INTEGER DEFAULT 0,
+            status       TEXT DEFAULT 'never'
+        )
+    """)
+
+    # Persistent Chat History
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS chat_sessions (
+            session_id   TEXT PRIMARY KEY,
+            user_id      TEXT NOT NULL,
+            title        TEXT NOT NULL,
+            created_at   TEXT NOT NULL,
+            updated_at   TEXT NOT NULL
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            message_id   TEXT PRIMARY KEY,
+            session_id   TEXT NOT NULL,
+            role         TEXT NOT NULL,      -- 'user' | 'assistant'
+            content      TEXT NOT NULL,
+            metadata     TEXT,               -- JSON: citations, etc.
+            timestamp    TEXT NOT NULL
+        )
+    """)
+
     # Seed role permissions
     role_permissions = [
         ("analyst",    "public",        1),
@@ -327,3 +360,118 @@ def get_ingestion_status(limit: int = 50) -> list[dict]:
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+
+# ── Connector sync state (incremental sync) ───────────────────────────────────
+
+def get_connector_sync_state(source_key: str) -> Optional[dict]:
+    """Return the last sync state for a source key (e.g. 'confluence:OPS')."""
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT * FROM connector_sync_state WHERE source_key=?", (source_key,)
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def set_connector_sync_state(
+    source_key: str,
+    source_type: str,
+    docs_synced: int = 0,
+    status: str = "success",
+):
+    """Update/insert sync state after a successful connector run."""
+    conn = get_connection()
+    now = datetime.utcnow().isoformat()
+    conn.execute("""
+        INSERT INTO connector_sync_state (source_key, source_type, last_synced, docs_synced, status)
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(source_key) DO UPDATE SET
+            last_synced=excluded.last_synced,
+            docs_synced=excluded.docs_synced,
+            status=excluded.status
+    """, (source_key, source_type, now, docs_synced, status))
+    conn.commit()
+    conn.close()
+
+
+def get_all_sync_states() -> list[dict]:
+    """Return sync state for all registered connectors."""
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT * FROM connector_sync_state ORDER BY last_synced DESC"
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+# ── Chat History ─────────────────────────────────────────────────────────────
+
+def create_chat_session(session_id: str, user_id: str, title: str):
+    conn = get_connection()
+    now = datetime.utcnow().isoformat()
+    conn.execute("""
+        INSERT INTO chat_sessions (session_id, user_id, title, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+    """, (session_id, user_id, title, now, now))
+    conn.commit()
+    conn.close()
+
+
+def get_user_chat_sessions(user_id: str, limit: int = 50) -> list[dict]:
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT * FROM chat_sessions 
+        WHERE user_id=? 
+        ORDER BY updated_at DESC LIMIT ?
+    """, (user_id, limit)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_chat_messages(session_id: str) -> list[dict]:
+    conn = get_connection()
+    rows = conn.execute("""
+        SELECT * FROM chat_messages 
+        WHERE session_id=? 
+        ORDER BY timestamp ASC
+    """, (session_id,)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def write_chat_message(
+    message_id: str, session_id: str, role: str, 
+    content: str, metadata: Optional[dict] = None
+):
+    conn = get_connection()
+    now = datetime.utcnow().isoformat()
+    conn.execute("""
+        INSERT INTO chat_messages (message_id, session_id, role, content, metadata, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (message_id, session_id, role, content, json.dumps(metadata), now))
+    
+    # Update session timestamp
+    conn.execute("UPDATE chat_sessions SET updated_at=? WHERE session_id=?", (now, session_id))
+    
+    conn.commit()
+    conn.close()
+
+
+def delete_chat_session(session_id: str, user_id: str):
+    conn = get_connection()
+    # Check ownership
+    conn.execute("DELETE FROM chat_messages WHERE session_id=?", (session_id,))
+    conn.execute("DELETE FROM chat_sessions WHERE session_id=? AND user_id=?", (session_id, user_id))
+    conn.commit()
+    conn.close()
+
+
+def rename_chat_session(session_id: str, user_id: str, new_title: str):
+    conn = get_connection()
+    conn.execute("""
+        UPDATE chat_sessions SET title=? 
+        WHERE session_id=? AND user_id=?
+    """, (new_title, session_id, user_id))
+    conn.commit()
+    conn.close()

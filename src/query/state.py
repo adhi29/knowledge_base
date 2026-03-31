@@ -34,6 +34,10 @@ class QueryState(BaseModel):
     citations: list[dict] = Field(default_factory=list)         # [{source, page, chunk_id}]
     confidence: float = 0.0
 
+    # ── Content Safety Filter ────────────────────────────────────────────────
+    content_filtered: bool = False          # True if query was blocked by filter
+    content_filter_reason: Optional[str] = None  # Internal reason the query was blocked
+
     # ── Error handling ─────────────────────────────────────────────────────────
     error: Optional[str] = None
     no_results: bool = False

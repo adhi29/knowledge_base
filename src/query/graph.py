@@ -17,6 +17,7 @@ from src.query.nodes.context_assembly_node import context_assembly_node
 from src.query.nodes.llm_generation_node import llm_generation_node
 from src.query.nodes.citation_formatter_node import citation_formatter_node
 from src.query.nodes.audit_log_node import audit_log_node
+from src.query.nodes.content_filter_node import content_filter_node
 
 
 # ── Wrapper nodes that track timing ───────────────────────────────────────────
@@ -29,6 +30,31 @@ def stop_timer(state: QueryState) -> QueryState:
     return state.model_copy(update={"end_time_ms": time.time()})
 
 
+def greeting_response(state: QueryState) -> QueryState:
+    """Handle greetings and small talk — no retrieval needed, short friendly reply."""
+    from groq import Groq
+    from src.config import settings as _settings
+    try:
+        client = Groq(api_key=_settings.groq_api_key)
+        resp = client.chat.completions.create(
+            model=_settings.router_model,
+            messages=[
+                {"role": "system", "content": (
+                    "You are a friendly banking operations assistant called CITI BRAIN. "
+                    "Respond to the user's greeting or casual message warmly in 1-2 short sentences. "
+                    "Do NOT mention any banking documents, policies, or context. Just be friendly and helpful."
+                )},
+                {"role": "user", "content": state.query},
+            ],
+            max_tokens=80,
+            temperature=0.7,
+        )
+        reply = resp.choices[0].message.content.strip()
+    except Exception:
+        reply = "Hello! I'm CITI BRAIN, your banking operations assistant. How can I help you today?"
+    return state.model_copy(update={"response": reply, "citations": [], "confidence": 1.0})
+
+
 # ── Conditional edge functions ─────────────────────────────────────────────────
 
 def should_continue_after_auth(state: QueryState) -> str:
@@ -36,7 +62,11 @@ def should_continue_after_auth(state: QueryState) -> str:
 
 
 def should_continue_after_rbac(state: QueryState) -> str:
-    return "classify" if state.rbac_passed else "end"
+    return "content_filter" if state.rbac_passed else "end"
+
+
+def should_continue_after_content_filter(state: QueryState) -> str:
+    return "blocked" if state.content_filtered else "safe"
 
 
 def should_continue_after_search(state: QueryState) -> str:
@@ -67,7 +97,9 @@ def build_query_graph() -> StateGraph:
     graph.add_node("start_timer",        start_timer)
     graph.add_node("auth",               auth_node)
     graph.add_node("rbac",               rbac_node)
+    graph.add_node("content_filter",     content_filter_node)
     graph.add_node("classify",           classifier_node)
+    graph.add_node("greeting_response",  greeting_response)
     graph.add_node("rewrite",            query_router_node)
     graph.add_node("search",             hybrid_search_node)
     graph.add_node("rbac_filter",        rbac_filter_node)
@@ -96,12 +128,28 @@ def build_query_graph() -> StateGraph:
     graph.add_conditional_edges(
         "rbac",
         should_continue_after_rbac,
-        {"classify": "classify", "end": "error_response"},
+        {"content_filter": "content_filter", "end": "error_response"},
     )
 
-    # Classification → query rewriting → hybrid search
-    graph.add_edge("classify",  "rewrite")
-    graph.add_edge("rewrite",   "search")
+    # Content filter conditional
+    graph.add_conditional_edges(
+        "content_filter",
+        should_continue_after_content_filter,
+        {"safe": "classify", "blocked": "error_response"},
+    )
+
+    # Classification → route (greeting short-circuit OR query rewriting)
+    def should_continue_after_classify(state: QueryState) -> str:
+        return "greeting" if state.query_type == "greeting" else "rewrite"
+
+    graph.add_conditional_edges(
+        "classify",
+        should_continue_after_classify,
+        {"greeting": "greeting_response", "rewrite": "rewrite"},
+    )
+    graph.add_edge("greeting_response", "stop_timer")
+
+    graph.add_edge("rewrite", "search")
 
     # Search conditional
     graph.add_conditional_edges(

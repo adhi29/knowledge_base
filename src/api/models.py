@@ -73,6 +73,26 @@ class IngestResponse(BaseModel):
     errors: list[str]
 
 
+class SyncRequest(BaseModel):
+    """Request body for POST /api/admin/sync/{source}"""
+    # Confluence
+    space_key: Optional[str] = None          # e.g. "OPS"
+    # Jira
+    project_key: Optional[str] = None        # e.g. "BANK"
+    jql: Optional[str] = None               # override default JQL
+    # Outlook
+    mailbox: Optional[str] = None           # override MS_MAILBOX
+    folder: str = "Inbox"
+    # SharePoint
+    site_id: Optional[str] = None
+    drive_id: Optional[str] = None
+    folder_path: str = "root"
+    # Common
+    sensitivity_level: str = "internal"
+    allowed_roles: Optional[list[str]] = None
+    max_items: int = 500
+
+
 class AuditLogEntry(BaseModel):
     log_id: str
     user_id: str

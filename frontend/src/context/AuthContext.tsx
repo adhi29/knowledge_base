@@ -14,8 +14,8 @@ interface AuthCtx {
 const Ctx = createContext<AuthCtx>({} as AuthCtx)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser]   = useState<User | null>(null)
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
+  const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(sessionStorage.getItem('token'))
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -31,15 +31,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (username: string, password: string) => {
     const { data } = await apiLogin(username, password)
-    localStorage.setItem('token', data.access_token)
+    sessionStorage.setItem('token', data.access_token)
     setToken(data.access_token)
     setUser({ user_id: data.user_id, username: data.username, role: data.role })
   }
 
   const logout = () => {
-    localStorage.clear()
+    sessionStorage.clear()
     setToken(null)
     setUser(null)
+    // Replace entire history with /login so Forward button can't re-enter the app
+    window.history.replaceState(null, '', '/login')
+    window.location.replace('/login')
   }
 
   return <Ctx.Provider value={{ user, token, login, logout, loading }}>{children}</Ctx.Provider>

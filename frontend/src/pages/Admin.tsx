@@ -1,20 +1,68 @@
 import { useEffect, useState } from 'react'
-import { getStats, getIngestionStatus, ingestPath } from '../api/client'
-import { FolderOpen, Play, CheckCircle, XCircle, Clock, Database, FileText, RefreshCw } from 'lucide-react'
+import { getStats, getIngestionStatus, ingestPath, syncSource, getSyncStatus } from '../api/client'
+import {
+  FolderOpen, Play, CheckCircle, XCircle, Clock, Database, FileText,
+  RefreshCw, Zap, BookOpen, Ticket, Mail, Share2
+} from 'lucide-react'
+
+// Source type badge config — icon + colour per source
+const SOURCE_BADGES: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
+  confluence: { icon: <BookOpen size={12} />, color: 'bg-blue-100 text-blue-700', label: 'Confluence' },
+  jira: { icon: <Ticket size={12} />, color: 'bg-purple-100 text-purple-700', label: 'Jira' },
+  email: { icon: <Mail size={12} />, color: 'bg-orange-100 text-orange-700', label: 'Email' },
+  sharepoint: { icon: <Share2 size={12} />, color: 'bg-teal-100 text-teal-700', label: 'SharePoint' },
+  pdf: { icon: <FileText size={12} />, color: 'bg-red-100 text-red-700', label: 'PDF' },
+}
+
+function SourceBadge({ type }: { type: string }) {
+  const cfg = SOURCE_BADGES[type?.toLowerCase()] ?? {
+    icon: <FileText size={12} />,
+    color: 'bg-slate-100 text-slate-600',
+    label: type,
+  }
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${cfg.color}`}>
+      {cfg.icon}{cfg.label}
+    </span>
+  )
+}
+
+const LIVE_SOURCES = [
+  { key: 'confluence' as const, label: 'Confluence', icon: <BookOpen size={16} />, color: 'blue', spaceField: true },
+  { key: 'jira' as const, label: 'Jira', icon: <Ticket size={16} />, color: 'purple', projectField: true },
+]
 
 export default function Admin() {
-  const [stats, setStats]   = useState<any>(null)
+  const [stats, setStats] = useState<any>(null)
   const [ingestionLog, setIngestionLog] = useState<any[]>([])
-  const [path, setPath]     = useState('')
+  const [syncStates, setSyncStates] = useState<any[]>([])
+  const [path, setPath] = useState('')
   const [sensitivity, setSensitivity] = useState('internal')
-  const [roles, setRoles]   = useState<string[]>(['analyst','operations','compliance','admin'])
+  const [roles, setRoles] = useState<string[]>(['analyst', 'operations', 'compliance', 'admin'])
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<any>(null)
-  const [error, setError]   = useState('')
+  const [error, setError] = useState('')
+
+  // Live sync state per source
+  const [syncInputs, setSyncInputs] = useState<Record<string, string>>({
+    confluence: '', jira: '',
+  })
+  const [syncLoading, setSyncLoading] = useState<Record<string, boolean>>({})
+  const [syncResult, setSyncResult] = useState<Record<string, any>>({})
+  const [syncError, setSyncError] = useState<Record<string, string>>({})
 
   const refresh = () => {
-    Promise.all([getStats(), getIngestionStatus()])
-      .then(([s, i]) => { setStats(s.data); setIngestionLog(i.data) })
+    Promise.all([getStats(), getIngestionStatus(), getSyncStatus()])
+      .then(([s, i, ss]) => {
+        setStats(s.data)
+        setIngestionLog(i.data)
+        setSyncStates(ss.data ?? [])
+      })
+      .catch(() => {
+        // getSyncStatus may 404 on first run — that's fine
+        Promise.all([getStats(), getIngestionStatus()])
+          .then(([s, i]) => { setStats(s.data); setIngestionLog(i.data) })
+      })
   }
 
   useEffect(() => { refresh() }, [])
@@ -33,14 +81,34 @@ export default function Admin() {
     }
   }
 
+  const handleSync = async (source: 'confluence' | 'jira') => {
+    const inputVal = syncInputs[source]?.trim()
+    if (!inputVal) return
+    setSyncLoading(p => ({ ...p, [source]: true }))
+    setSyncError(p => ({ ...p, [source]: '' }))
+    setSyncResult(p => ({ ...p, [source]: null }))
+    try {
+      const body = source === 'confluence'
+        ? { space_key: inputVal }
+        : { project_key: inputVal }
+      const { data } = await syncSource(source, body)
+      setSyncResult(p => ({ ...p, [source]: data }))
+      refresh()
+    } catch (e: any) {
+      setSyncError(p => ({ ...p, [source]: e.response?.data?.detail || `${source} sync failed.` }))
+    } finally {
+      setSyncLoading(p => ({ ...p, [source]: false }))
+    }
+  }
+
   const toggleRole = (r: string) =>
     setRoles(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])
 
   const ROLE_PILLS = [
-    { key: 'analyst',    label: 'Analyst',    color: 'bg-green-100 text-green-700 border-green-300' },
+    { key: 'analyst', label: 'Analyst', color: 'bg-green-100 text-green-700 border-green-300' },
     { key: 'operations', label: 'Operations', color: 'bg-blue-100 text-blue-700 border-blue-300' },
     { key: 'compliance', label: 'Compliance', color: 'bg-purple-100 text-purple-700 border-purple-300' },
-    { key: 'admin',      label: 'Admin',      color: 'bg-red-100 text-red-700 border-red-300' },
+    { key: 'admin', label: 'Admin', color: 'bg-red-100 text-red-700 border-red-300' },
   ]
 
   return (
@@ -48,7 +116,7 @@ export default function Admin() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Document Management</h1>
-          <p className="text-sm text-slate-500 mt-1">Ingest documents into the knowledge base</p>
+          <p className="text-sm text-slate-500 mt-1">Ingest documents and sync live enterprise sources</p>
         </div>
         <button onClick={refresh} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg transition-colors">
           <RefreshCw size={14} /> Refresh
@@ -74,6 +142,62 @@ export default function Admin() {
             <p className="text-2xl font-bold text-slate-800">{ingestionLog.length}</p>
             <p className="text-xs text-slate-500">Documents Ingested</p>
           </div>
+        </div>
+      </div>
+
+      {/* ── Live Enterprise Sync ── */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <h2 className="font-semibold text-slate-800 mb-1 flex items-center gap-2">
+          <Zap size={18} className="text-amber-500" /> Live Enterprise Sync
+        </h2>
+        <p className="text-xs text-slate-400 mb-5">Pulls live data from your enterprise tools into the knowledge base</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {LIVE_SOURCES.map(src => (
+            <div key={src.key} className="border border-slate-200 rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className={`text-${src.color}-600`}>{src.icon}</span>
+                <span className="font-medium text-slate-700">{src.label}</span>
+                {/* Last sync state badge */}
+                {syncStates.find(s => s.source_type === src.key) && (
+                  <span className="ml-auto text-xs text-slate-400">
+                    Last: {new Date(syncStates.find(s => s.source_type === src.key)?.last_synced).toLocaleString()}
+                  </span>
+                )}
+              </div>
+
+              <input
+                type="text"
+                value={syncInputs[src.key]}
+                onChange={e => setSyncInputs(p => ({ ...p, [src.key]: e.target.value }))}
+                placeholder={src.key === 'confluence' ? 'Space key, e.g. OPS' : 'Project key, e.g. BANK'}
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+
+              {syncError[src.key] && (
+                <div className="flex items-center gap-1.5 text-red-600 text-xs">
+                  <XCircle size={13} />{syncError[src.key]}
+                </div>
+              )}
+              {syncResult[src.key] && (
+                <div className="text-green-700 text-xs flex items-center gap-1.5">
+                  <CheckCircle size={13} />
+                  {syncResult[src.key].documents_processed} docs · {syncResult[src.key].chunks_created} new chunks
+                </div>
+              )}
+
+              <button
+                onClick={() => handleSync(src.key)}
+                disabled={syncLoading[src.key] || !syncInputs[src.key]?.trim()}
+                className={`w-full flex items-center justify-center gap-2 bg-${src.color}-600 hover:bg-${src.color}-700 disabled:opacity-40 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors`}
+              >
+                {syncLoading[src.key]
+                  ? <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Syncing…</>
+                  : <><Zap size={13} />Sync Now</>
+                }
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -123,9 +247,8 @@ export default function Admin() {
                     key={key}
                     type="button"
                     onClick={() => toggleRole(key)}
-                    className={`text-xs px-3 py-1 rounded-full border font-medium transition-all ${
-                      roles.includes(key) ? color : 'bg-slate-100 text-slate-400 border-slate-200'
-                    }`}
+                    className={`text-xs px-3 py-1 rounded-full border font-medium transition-all ${roles.includes(key) ? color : 'bg-slate-100 text-slate-400 border-slate-200'
+                      }`}
                   >
                     {label}
                   </button>
@@ -161,7 +284,7 @@ export default function Admin() {
         </div>
       </div>
 
-      {/* Ingestion history */}
+      {/* Ingestion history with source type badges */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100">
           <h3 className="font-semibold text-slate-800">Ingestion History</h3>
@@ -180,7 +303,7 @@ export default function Admin() {
                 <tr key={row.log_id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 text-slate-700 font-medium max-w-xs truncate">{row.source_path.split('/').pop()}</td>
                   <td className="px-4 py-3">
-                    <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs font-medium">{row.source_type}</span>
+                    <SourceBadge type={row.source_type} />
                   </td>
                   <td className="px-4 py-3">
                     {row.status === 'success' ? (

@@ -40,4 +40,10 @@ pydantic>=2.8.0
 pydantic-settings>=2.4.0
 httpx>=0.27.0
 tenacity>=8.5.0
+apscheduler>=3.10.0
 rich>=13.7.0
+
+# Enterprise Connectors
+atlassian-python-api>=3.41.0  # Confluence + Jira REST API
+msal>=1.30.0                  # Microsoft auth for Outlook + SharePoint
+html2text>=2024.2.26          # HTML → plain text (emails, Confluence pages)

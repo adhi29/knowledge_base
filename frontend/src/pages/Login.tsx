@@ -1,15 +1,18 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Building2, Lock, User, AlertCircle } from 'lucide-react'
 
 export default function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(false)
-  const { login } = useAuth()
-  const navigate  = useNavigate()
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { login, user, loading: authLoading } = useAuth()
+  const navigate = useNavigate()
+
+  // If already authenticated, redirect away — prevents Forward button re-entry
+  if (!authLoading && user) return <Navigate to="/chat" replace />
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -17,7 +20,8 @@ export default function Login() {
     setLoading(true)
     try {
       await login(username, password)
-      navigate('/chat')
+      // replace: true removes /login from history so Back can't return to it
+      navigate('/chat', { replace: true })
     } catch {
       setError('Invalid username or password.')
     } finally {

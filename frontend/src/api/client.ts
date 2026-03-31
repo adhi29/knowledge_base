@@ -3,7 +3,7 @@ import axios from 'axios'
 const api = axios.create({ baseURL: '/api' })
 
 api.interceptors.request.use(cfg => {
-  const token = localStorage.getItem('token')
+  const token = sessionStorage.getItem('token')
   if (token) cfg.headers.Authorization = `Bearer ${token}`
   return cfg
 })
@@ -12,7 +12,7 @@ api.interceptors.response.use(
   r => r,
   err => {
     if (err.response?.status === 401) {
-      localStorage.clear()
+      sessionStorage.clear()
       window.location.href = '/login'
     }
     return Promise.reject(err)
@@ -57,3 +57,15 @@ export const getAuditLogs = (user_id?: string, limit = 100) =>
   api.get('/admin/audit-logs', { params: { user_id, limit } })
 export const ingestPath = (path: string, sensitivity_level = 'internal', allowed_roles?: string[]) =>
   api.post('/admin/ingest', { path, sensitivity_level, allowed_roles, recursive: true })
+export const syncSource = (
+  source: 'confluence' | 'jira' | 'outlook' | 'sharepoint',
+  body: Record<string, unknown>,
+) => api.post(`/admin/sync/${source}`, body)
+export const getSyncStatus = () => api.get('/admin/sync-status')
+
+// ── Chat History ─────────────────────────────────────────────────────────────
+export const getChatSessions = () => api.get('/chat/history/sessions')
+export const getSessionMessages = (id: string) => api.get(`/chat/history/sessions/${id}`)
+export const deleteSession = (id: string) => api.delete(`/chat/history/sessions/${id}`)
+export const renameSession = (id: string, title: string) =>
+  api.patch(`/chat/history/sessions/${id}`, null, { params: { title } })
